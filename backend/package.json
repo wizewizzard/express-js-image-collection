@@ -5,8 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start_windows": "set PORT=8888&&node index.js",
-    "serve_windows": "set PORT=8888&&nodemon index.js",
+    "start_windows": "set PORT=8081&&node index.js",
+    "serve_windows": "set PORT=8081&&nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
