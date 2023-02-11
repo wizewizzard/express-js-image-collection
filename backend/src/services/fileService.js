@@ -34,7 +34,7 @@ const fileService = {
         }
     },
     async deleteDirectory(dir, props = { recursive: true }) {
-        logger.debug(`Trying to delete directory: ${dir}`);
+        logger.debug(`Deleting directory: ${dir}`);
         if (await this.dirExists(dir)) {
             await fs.rmdir(dir, props, (err) => {
                 if (err) {
@@ -48,6 +48,15 @@ const fileService = {
         }
         else {
             logger.info('Directory does not exist');
+        }
+    },
+    async deleteFile(path) {
+        logger.debug(`Deleting file ${path}`);
+        if(await this.fileExists(path)) {
+            fs.rmSync(path);
+        }
+        else {
+            throw new Error('File does not exist');
         }
     },
     moveFile(source, destination) {
@@ -79,19 +88,19 @@ const fileService = {
         let attemptsLeft = attemptCount;
         return new Promise((res, rej) => {
             const attemptFunc =  () => {
-                logger.debug(`Trying to access file ${path}`);
+                logger.debug(`Trying to access file ${path}. Attempts left: ${attemptsLeft}`);
                 fs.access(path, fs.F_OK, (err) => {
                     attemptsLeft --;
                     if (err) {
                         logger.warn(`File ${path} is not accessible. Attempts left: ${attemptsLeft}`);
                         if (attemptsLeft === 0) {
-                            rej('File is not available');
+                            res(false);
                         }
-                        setTimeout(attemptFunc(), 50);
+                        setTimeout(attemptFunc, 50);
                     }
                     else {
                         logger.debug(`File ${path} is available. Attempts left: ${attemptsLeft}`);
-                        res('File is available to be read');
+                        res(true);
                     }
                 }, 50)
             };

@@ -25,7 +25,10 @@ const imageService = {
                 defaultsPath
             } = await this.prepareCollectionDirectory(collectionId);
             const fileName = uploadedFile[1].originalFilename;
-            await(fileService.fileExists(uploadedFile[1].filepath));
+            const fileExists = await(fileService.fileExists(uploadedFile[1].filepath));
+            if(!fileExists) {
+                throw new Error('Uploaded file does not exist');
+            }
             await fileService.moveFile(uploadedFile[1].filepath, path.resolve(origsPath, fileName));
             const contents = fs.readFileSync(path.resolve(origsPath, fileName));
             const thumbnail = await this.resizeImage(contents, thumbnailOptions);
@@ -37,6 +40,22 @@ const imageService = {
         else {
             logger.error(`Collection with id ${collectionId} does not exist'`);
             throw new Error(`Collection with id ${collectionId} does not exist'`);
+        }
+    },
+    async removeImageFromCollection(collectionId, imageName) {
+        if(await collectionService.collectionExistsById(collectionId)) {
+            logger.debug(`Deleting image ${imageName} frim collection ${collectionId}`);
+            const {
+                origsPath,
+                thumbsPath,
+                defaultsPath
+            } = this.getCollectionPaths(collectionId);
+            logger.debug(origsPath,
+                thumbsPath,
+                defaultsPath);
+            await fileService.deleteFile(path.resolve(origsPath, imageName));
+            await fileService.deleteFile(path.resolve(thumbsPath, imageName));
+            await fileService.deleteFile(path.resolve(defaultsPath, imageName));
         }
     },
     resizeImage(data, opts) {
@@ -52,11 +71,20 @@ const imageService = {
                 });
         });
     },
-    async prepareCollectionDirectory(collectionId) {
+    getCollectionPaths(collectionId) {
         const collectionPath = path.resolve(__dir, config.uploadsDir, collectionId);
         const origsPath = path.resolve(collectionPath, 'origs');
         const thumbsPath = path.resolve(collectionPath, 'thumbs');
         const defaultsPath = path.resolve(collectionPath, 'defaults');
+        return {
+            collectionPath,
+            origsPath,
+            thumbsPath,
+            defaultsPath
+        }
+    },
+    async prepareCollectionDirectory(collectionId) {
+        const {collectionPath, origsPath, thumbsPath, defaultsPath} = this.getCollectionPaths(collectionId);
         if(!await fileService.dirExists(collectionPath) ){
             await fileService.createDirectory(collectionPath);
         }
@@ -69,13 +97,7 @@ const imageService = {
         if(!await fileService.dirExists(defaultsPath) ){
             await fileService.createDirectory(defaultsPath);
         }
-
-        return {
-            collectionPath,
-            origsPath,
-            thumbsPath,
-            defaultsPath
-        }
+        return {collectionPath, origsPath, thumbsPath, defaultsPath};
     }
 
 };

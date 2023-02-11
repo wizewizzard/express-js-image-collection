@@ -48,8 +48,7 @@ export default (app) => {
         }
     });
 
-    app.post('/api/collection/:id/upload', (req, res) => {
-        logger.debug('Called upload image in collection')
+    app.post('/api/collection/:id/image', (req, res) => {
         const collectionId = req.params['id'] ;
         const form = new formidable.IncomingForm();
         const files = [];
@@ -63,7 +62,6 @@ export default (app) => {
             files.push([field, file]);
         });
         form.once('end', async () => {
-            logger.debug('Form on end');
             try{
                 await Promise.all(files.map(async (file) => {
                     await(imageService.saveImageInCollection(collectionId, file));
@@ -81,7 +79,18 @@ export default (app) => {
         form.parse(req);
     });
 
-    app.delete('/api/collection/:id/delete/:name', (req, res) => {
-        
+    app.delete('/api/collection/:id/image/:name', async (req, res) => {
+        const collectionId = req.params['id'];
+        const imageName = req.params['name'];
+
+        try{
+            await imageService.removeImageFromCollection(collectionId, imageName);
+            res.send({status: true, message: 'Deleted'}).end();
+        }
+        catch(err) {
+            logger.error('Error deleting image from collection', err);
+            res.status(500);
+                res.send({status: false, message: err.message}).end();
+        }
     });
 }
