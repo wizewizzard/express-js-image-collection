@@ -95,6 +95,7 @@ const fileService = {
                         logger.warn(`File ${path} is not accessible. Attempts left: ${attemptsLeft}`);
                         if (attemptsLeft === 0) {
                             res(false);
+                            return;
                         }
                         setTimeout(attemptFunc, 50);
                     }

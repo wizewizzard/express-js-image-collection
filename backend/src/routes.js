@@ -82,13 +82,12 @@ export default (app) => {
     app.delete('/api/collection/:id/image/:name', async (req, res) => {
         const collectionId = req.params['id'];
         const imageName = req.params['name'];
-
         try{
             await imageService.removeImageFromCollection(collectionId, imageName);
             res.send({status: true, message: 'Deleted'}).end();
         }
         catch(err) {
-            logger.error('Error deleting image from collection', err);
+            logger.warn('Error deleting image from collection', err);
             res.status(500);
                 res.send({status: false, message: err.message}).end();
         }
