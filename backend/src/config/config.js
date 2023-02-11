@@ -12,5 +12,10 @@ export default {
             port: process.env.DB_PORT || 5432
         }
     },
-    uploadsDir: path.resolve(path.resolve(), 'uploads')
+    uploadsDir: 'uploads',
+    image: {
+        validTypes: ["jpg", "jpeg", "png"],
+        thumbnailSize: 300,
+        defaultSize: 2000,
+    }
 }

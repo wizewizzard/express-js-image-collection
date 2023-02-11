@@ -1,6 +1,11 @@
 import formidable from 'formidable';
 import collectionService from './services/CollectionService.js';
 import imageService from './services/imageService.js';
+import log4js from 'log4js';
+
+
+const logger = log4js.getLogger('Routes');
+logger.level = 'debug';
 
 export default (app) => {
     app.get('/', (req, res) => {
@@ -27,25 +32,25 @@ export default (app) => {
         });
     });
 
-    app.put('/api/collection', (req, res) => {
-        const form = new formidable.IncomingForm();
-        const fields = [];
+    app.delete('/api/collection/:id', async (req, res) => {
+        var collectionId = req.params['id'] ;
 
-        form.on('field', function(field, value) {
-            fields.push([field, value]);
-        })
-
-        form.on('end', function() {
-            console.log('done');
-
-            res.end();
-        });
-
-        form.parse(req);
+        try{
+            await collectionService.deleteCollection(collectionId);
+            console.log('abc')
+            res.status(204);
+            res.end('Deleted');
+        }
+        catch(err) {
+            logger.error('Unable to delete collection', err)
+            res.status(404);
+            res.send(err.message).end();
+        }
     });
 
     app.post('/api/collection/:id/upload', (req, res) => {
-        var collectionId = req.params['id'] ;
+        logger.debug('Called upload image in collection')
+        const collectionId = req.params['id'] ;
         const form = new formidable.IncomingForm();
         const files = [];
         const fields = [];
@@ -57,16 +62,23 @@ export default (app) => {
             console.log(file.originalFilename);
             files.push([field, file]);
         });
-        form.on('end', function() {
-            console.log(`Uploaded images to collection with id ${collectionId} `);
-            res.end('Uploaded');
+        form.once('end', async () => {
+            logger.debug('Form on end');
+            try{
+                await Promise.all(files.map(async (file) => {
+                    await(imageService.saveImageInCollection(collectionId, file));
+                }), (err) => { logger.error('Error!', err)})
+                logger.debug(`Uploaded images to collection with id ${collectionId} `);
+                res.send({status: true, message: 'Uploaded'}).end();
+            }
+            catch(err) {
+                logger.error('Error uploading files in collection', err);
+                res.status(500);
+                res.send({status: false, message: err.message}).end();
+            }
         });
         
         form.parse(req);
-    });
-
-    app.delete('/api/collection/:id', (req, res) => {
-
     });
 
     app.delete('/api/collection/:id/delete/:name', (req, res) => {
