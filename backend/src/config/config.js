@@ -14,7 +14,7 @@ export default {
     },
     uploadsDir: 'uploads',
     image: {
-        validTypes: ["jpg", "jpeg", "png"],
+        validImageExtensions: [".jpg", ".jpeg", ".png"],
         thumbnailSize: 300,
         defaultSize: 2000,
     }

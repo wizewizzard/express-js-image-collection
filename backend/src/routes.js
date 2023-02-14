@@ -12,15 +12,24 @@ export default (app) => {
         res.sendFile(path.resolve("static", "index.html"));
     });
     
-    app.get('/api/collection', (req, res) => {
-        res.send('Showing collection');
+    app.get('/api/collection/:id', async (req, res) => {
+        var collectionId = req.params['id'] ;
+        try{
+            const result = await collectionService.getCollectionImageList(collectionId);
+            res.send({'status': true, 'data': result}).end();
+        }
+        catch(err) {
+            logger.error(`Error when listing images of collection ${collectionId}`, err);
+            res.status(500);
+            res.send({status: false, message: err.message}).end();
+        }
+        
     });
 
     app.post('/api/collection', (req, res) => {
         const form = new formidable.IncomingForm();
 
         form.parse(req, async (err, fields) => {
-            console.log(fields);
             try{
                 await collectionService.createCollection(fields);
                 res.end('Created');

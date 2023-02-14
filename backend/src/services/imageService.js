@@ -9,9 +9,8 @@ import log4js from 'log4js';
 const logger = log4js.getLogger('ImageService');
 logger.level = 'debug';
 
-const __dir = path.resolve();
 const uploadsDir = config.uploadsDir;
-const validTypes = config.image.validTypes;
+const validImageExtensions = config.image.validImageExtensions;
 const thumbnailOptions = { width: config.image.thumbnailSize, height: config.image.thumbnailSize };
 const defaultOptions = { width: config.image.defaultSize, height: config.image.defaultSize };
 
@@ -23,7 +22,7 @@ const imageService = {
                 origsPath,
                 thumbsPath,
                 defaultsPath
-            } = await this.prepareCollectionDirectory(collectionId);
+            } = await collectionService.prepareCollectionDirectory(collectionId);
             const fileName = uploadedFile[1].originalFilename;
             const fileExists = await(fileService.fileExists(uploadedFile[1].filepath));
             if(!fileExists) {
@@ -49,7 +48,7 @@ const imageService = {
                 origsPath,
                 thumbsPath,
                 defaultsPath
-            } = this.getCollectionPaths(collectionId);
+            } = collectionService.getCollectionPaths(collectionId);
             logger.debug(origsPath,
                 thumbsPath,
                 defaultsPath);
@@ -57,6 +56,10 @@ const imageService = {
             await fileService.deleteFile(path.resolve(thumbsPath, imageName));
             await fileService.deleteFile(path.resolve(defaultsPath, imageName));
         }
+    },
+    async getImagesFromCollection(collectionId) {
+        const { origsPath } = collectionService.getCollectionPaths(collectionId);
+        return await fileService.getFilesInDirectory(origsPath, f => validImageExtensions.indexOf(path.extname(f)) !== -1);
     },
     resizeImage(data, opts) {
         return new Promise((res, rej) => {
@@ -71,35 +74,6 @@ const imageService = {
                 });
         });
     },
-    getCollectionPaths(collectionId) {
-        const collectionPath = path.resolve(__dir, config.uploadsDir, collectionId);
-        const origsPath = path.resolve(collectionPath, 'origs');
-        const thumbsPath = path.resolve(collectionPath, 'thumbs');
-        const defaultsPath = path.resolve(collectionPath, 'defaults');
-        return {
-            collectionPath,
-            origsPath,
-            thumbsPath,
-            defaultsPath
-        }
-    },
-    async prepareCollectionDirectory(collectionId) {
-        const {collectionPath, origsPath, thumbsPath, defaultsPath} = this.getCollectionPaths(collectionId);
-        if(!await fileService.dirExists(collectionPath) ){
-            await fileService.createDirectory(collectionPath);
-        }
-        if(!await fileService.dirExists(origsPath) ){
-            await fileService.createDirectory(origsPath);
-        }
-        if(!await fileService.dirExists(thumbsPath) ){
-            await fileService.createDirectory(thumbsPath);
-        }
-        if(!await fileService.dirExists(defaultsPath) ){
-            await fileService.createDirectory(defaultsPath);
-        }
-        return {collectionPath, origsPath, thumbsPath, defaultsPath};
-    }
-
 };
 
 export default imageService;

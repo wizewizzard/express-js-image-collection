@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import log4js from 'log4js';
 
 const logger = log4js.getLogger('FileService');
@@ -107,7 +108,20 @@ const fileService = {
             };
             setTimeout(attemptFunc, 50);
         });
+    },
+    getFilesInDirectory(dirPath, filter = (f) => f) {
+        return new Promise((res, rej) => {
+            fs.readdir(dirPath, (err, files) => {
+                if(err) {
+                    rej(err);
+                }
+                res(files.filter(filter));
+            });
+        })
     }
 };
 
-    export default fileService;
+export default fileService;
+const files = await fileService.getFilesInDirectory('C:\\Users\\user\\Documents\\Coding\\personal\\js\\image-host\\backend\\uploads\\16');
+
+logger.debug(files.filter(f => path.extname(f) === '.jpg'));
