@@ -49,28 +49,35 @@ export default {
         return collectionModel !== null;
     },
     async prepareCollectionDirectory(collectionId) {
-        const {collectionPath, origsPath, thumbsPath, defaultsPath} = this.getCollectionPaths(collectionId);
-        if(!await fileService.dirExists(collectionPath) ){
+        const {collectionPath, origsPath, thumbsPath, defaultsPath} = this.getCollectionDirectories(collectionId);
+        if(!await fileService.dirExists(collectionPath)){
             await fileService.createDirectory(collectionPath);
         }
-        if(!await fileService.dirExists(origsPath) ){
+        if(!await fileService.dirExists(origsPath)){
             await fileService.createDirectory(origsPath);
         }
-        if(!await fileService.dirExists(thumbsPath) ){
+        if(!await fileService.dirExists(thumbsPath)){
             await fileService.createDirectory(thumbsPath);
         }
-        if(!await fileService.dirExists(defaultsPath) ){
+        if(!await fileService.dirExists(defaultsPath)){
             await fileService.createDirectory(defaultsPath);
         }
         return {collectionPath, origsPath, thumbsPath, defaultsPath};
     },
-    getCollectionPaths(collectionId) {
-        const collectionPath = path.resolve(__dir, config.uploadsDir, collectionId);
-        const origsPath = path.resolve(collectionPath, 'origs');
-        const thumbsPath = path.resolve(collectionPath, 'thumbs');
-        const defaultsPath = path.resolve(collectionPath, 'defaults');
+    getCollectionDirectories(collectionId) {
+        const {collectionPath, origsPath, thumbsPath, defaultsPath} = this.getCollectionRoutes(collectionId);
         return {
-            collectionPath,
+            collectionPath: path.resolve(__dir, collectionId),
+            origsPath: path.resolve(__dir, config.uploadsDir, origsPath), 
+            thumbsPath: path.resolve(__dir, config.uploadsDir, thumbsPath), 
+            defaultsPath: path.resolve(__dir, config.uploadsDir, defaultsPath)
+        };
+    },
+    getCollectionRoutes(collectionId) {
+        const origsPath = path.join(collectionId, 'origs');
+        const thumbsPath = path.join(collectionId, 'thumbs');
+        const defaultsPath = path.join(collectionId, 'defaults');
+        return {
             origsPath,
             thumbsPath,
             defaultsPath

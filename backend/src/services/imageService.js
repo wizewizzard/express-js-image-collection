@@ -48,7 +48,7 @@ const imageService = {
                 origsPath,
                 thumbsPath,
                 defaultsPath
-            } = collectionService.getCollectionPaths(collectionId);
+            } = collectionService.getCollectionDirectories(collectionId);
             logger.debug(origsPath,
                 thumbsPath,
                 defaultsPath);
@@ -58,8 +58,14 @@ const imageService = {
         }
     },
     async getImagesFromCollection(collectionId) {
-        const { origsPath } = collectionService.getCollectionPaths(collectionId);
-        return await fileService.getFilesInDirectory(origsPath, f => validImageExtensions.indexOf(path.extname(f)) !== -1);
+        const { origsPath } = collectionService.getCollectionDirectories(collectionId);
+        const imagesInDirectory = await fileService.getFilesInDirectory(origsPath, f => validImageExtensions.indexOf(path.extname(f)) !== -1);
+        return imagesInDirectory.map(i => {
+            return {
+                imageName: i,
+                ...this.getImageUrls(collectionId, i)
+            };
+        })
     },
     resizeImage(data, opts) {
         return new Promise((res, rej) => {
@@ -74,6 +80,14 @@ const imageService = {
                 });
         });
     },
+    getImageUrls(collectionId, imageName) {
+        const { origsPath, thumbsPath, defaultsPath } = collectionService.getCollectionRoutes(collectionId);
+        return {
+            origUrl:  path.join(origsPath, imageName),
+            thumbUrl:  path.join(thumbsPath, imageName),
+            defaultUrl:  path.join(defaultsPath, imageName)
+        }
+    }
 };
 
 export default imageService;

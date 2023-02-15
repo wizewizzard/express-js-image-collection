@@ -122,6 +122,3 @@ const fileService = {
 };
 
 export default fileService;
-const files = await fileService.getFilesInDirectory('C:\\Users\\user\\Documents\\Coding\\personal\\js\\image-host\\backend\\uploads\\16');
-
-logger.debug(files.filter(f => path.extname(f) === '.jpg'));
