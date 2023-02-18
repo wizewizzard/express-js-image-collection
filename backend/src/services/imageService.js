@@ -7,7 +7,7 @@ import fileService from "./fileService.js";
 import log4js from 'log4js';
 
 const logger = log4js.getLogger('ImageService');
-logger.level = 'debug';
+logger.level = 'trace';
 
 const uploadsDir = config.uploadsDir;
 const validImageExtensions = config.image.validImageExtensions;
@@ -16,7 +16,7 @@ const defaultOptions = { width: config.image.defaultSize, height: config.image.d
 
 const imageService = {
     async saveImageInCollection(collectionId, uploadedFile, props) {
-        logger.trace('Saving images in collection');
+        logger.trace(`Saving images in collection with id ${collectionId}`);
         if(await collectionService.collectionExistsById(collectionId)) {
             const {
                 origsPath,

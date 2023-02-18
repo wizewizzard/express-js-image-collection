@@ -21,18 +21,16 @@ const fileService = {
         });
 
     },
-    async createDirectory(dir, props = { recursive: true }) {
-        if (!await this.dirExists(dir)) {
-            await fs.mkdir(dir, props, (err) => {
+    createDirectory(dir, props = { recursive: true }) {
+        return new Promise((res, rej) => {
+            fs.mkdir(dir, props, (err) => {
                 if (err) {
-                    logger.error('Error creating dir', err)
-                    throw new Error(`Error creating directory ${dir}. ` + err.message);
+                    logger.error('Error creating dir', err);
+                    rej(err);
                 }
+                res();
             });
-        }
-        else {
-            logger.info('Directory already exists');
-        }
+        })
     },
     async deleteDirectory(dir, props = { recursive: true }) {
         logger.debug(`Deleting directory: ${dir}`);
@@ -75,11 +73,9 @@ const fileService = {
         return new Promise((res, rej) => {
             fs.access(dir, (err) => {
                 if (err) {
-                    logger.warn(`Error checking directory: ${dir}. `, err)
                     res(false);
                 }
                 else {
-                    logger.info(`Directory exists: ${dir}. `)
                     res(true);
                 }
             });

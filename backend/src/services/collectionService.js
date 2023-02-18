@@ -15,11 +15,13 @@ export default {
         const collectionModel = Collection.build(collectionData);
         try{
             await collectionModel.save();
-            await fileService.createDirectory(path.resolve(config.uploadsDir, collectionModel.name));
-            logger.info('Collection saved: ', collectionModel.name);
+            await this.prepareCollectionDirectory(collectionModel.id);
+            logger.info('Collection created: ', collectionModel.name);
+            return { id: collectionModel.id };
         }
         catch(err) {
-            logger.error('Error when creating collection ', err)
+            logger.error('Error when creating collection ', err);
+            throw err;
         }
     },
     async getCollectionImageList(collectionId) {
@@ -49,25 +51,29 @@ export default {
         return collectionModel !== null;
     },
     async prepareCollectionDirectory(collectionId) {
+        logger.debug(`Preparing directory for collection id ${collectionId}`);
         const {collectionPath, origsPath, thumbsPath, defaultsPath} = this.getCollectionDirectories(collectionId);
-        if(!await fileService.dirExists(collectionPath)){
-            await fileService.createDirectory(collectionPath);
-        }
-        if(!await fileService.dirExists(origsPath)){
-            await fileService.createDirectory(origsPath);
-        }
-        if(!await fileService.dirExists(thumbsPath)){
-            await fileService.createDirectory(thumbsPath);
-        }
-        if(!await fileService.dirExists(defaultsPath)){
-            await fileService.createDirectory(defaultsPath);
-        }
-        return {collectionPath, origsPath, thumbsPath, defaultsPath};
+        return Promise.all(
+            [collectionPath, origsPath, thumbsPath, defaultsPath].map(dir => {
+                return new Promise((res, rej) => {
+                    fileService.dirExists(dir).then(exists => {
+                        if(!exists) {
+                            fileService.createDirectory(dir)
+                                .then(_ => res())
+                                .catch(err => rej(err));
+                        }
+                        res();
+                    }).catch(err => rej(err));
+                });
+            })
+        ).then(_ => {
+            return {collectionPath, origsPath, thumbsPath, defaultsPath};
+        });     
     },
     getCollectionDirectories(collectionId) {
         const {collectionPath, origsPath, thumbsPath, defaultsPath} = this.getCollectionRoutes(collectionId);
         return {
-            collectionPath: path.resolve(__dir, collectionId),
+            collectionPath: path.resolve(__dir, config.uploadsDir, collectionId),
             origsPath: path.resolve(__dir, config.uploadsDir, origsPath), 
             thumbsPath: path.resolve(__dir, config.uploadsDir, thumbsPath), 
             defaultsPath: path.resolve(__dir, config.uploadsDir, defaultsPath)
