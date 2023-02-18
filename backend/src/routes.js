@@ -30,8 +30,17 @@ export default (app) => {
         const form = new formidable.IncomingForm();
 
         form.parse(req, async (err, fields) => {
+            console.log(fields);
+            if(err) {
+                console.log(err);
+                res.status(404).send({
+                    status: false,
+                    message: err.message, 
+                }).end();
+            }
             try{
-                const {id} = await collectionService.createCollection(fields);
+                const {collectionName: name, collectionDescription: description } = fields;
+                const {id} = await collectionService.createCollection({name, description});
                 res.send({
                     status: true, 
                     data: {
@@ -41,7 +50,7 @@ export default (app) => {
             }
             catch(err) {
                 console.log(err);
-                res.status(404).send({
+                res.status(400).send({
                     status: false,
                     message: err.message, 
                 }).end();
