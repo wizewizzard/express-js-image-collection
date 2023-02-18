@@ -31,12 +31,20 @@ export default (app) => {
 
         form.parse(req, async (err, fields) => {
             try{
-                await collectionService.createCollection(fields);
-                res.end('Created');
+                const {id} = await collectionService.createCollection(fields);
+                res.send({
+                    status: true, 
+                    data: {
+                        id: id
+                    }
+                }).end();
             }
             catch(err) {
                 console.log(err);
-                res.end('Error occured');
+                res.status(404).send({
+                    status: false,
+                    message: err.message, 
+                }).end();
             }
         });
     });
